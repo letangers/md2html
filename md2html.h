@@ -9,7 +9,7 @@
 
 using namespace std;
 
-set<char> symbol_pre={'*','`','~','['};
+static set<char> symbol_pre={'*','`','~','['};
 
 enum token{
 	nul		=0,
@@ -39,7 +39,36 @@ enum token{
 	table	=23,
 	tr		=24,
 	td		=25
-}
+};
+
+static vector<string> tag={
+	"nul",
+	"h1",
+	"h2",
+	"h3",
+	"h4",
+	"h5",
+	"h6",
+	"ul",
+	"ol",
+	"li",
+	"blockquote",
+	"pre",
+	"a",
+	"href",
+	"img",
+	"src",
+	"code",
+	"i",
+	"strong",
+	"strike",
+	"hr",
+	"br",
+	"p",
+	"table",
+	"tr",
+	"td"
+};
 
 class node{
 	public:
@@ -69,8 +98,10 @@ class md2html{
 	public:
 		node * current_node;
 		node * current_root;
+		string content;
 		vector<node *> tree_;
-		md2html::md2html(string &fname){
+		md2html(string fname){
+			content="";
 			vector<string> input;
 			ifstream fin(fname);
 			while(!fin.eof()){
@@ -80,20 +111,21 @@ class md2html{
 			}
 			fin.close();
 
-			GenerateTree(input);
+			this->GenerateTree(input);
 		}
 		md2html(vector<string> & input){
 			GenerateTree(input);
 		}
 		bool IsEmptyLine(string &line,int &locate);
 		void Strip(string &line,int &locate);
-		bool IsSymbol(string &line,int & locate);
+		bool IsSymbol(string &line,int & locate,string symbol);
 		void CreateNewNode(token one);
 		void CreateNewRoot();
 		bool GetLink(string &line,int &locate);
 		void GetNextSymbol(string & line,int &locate);
-		void FindRootSymbol(string &line,int &locate);
+		void FindRootSymbol(string &line,int &locate,bool &new_root);
 		void GenerateTree(vector<string> &input);
+		void Dfs(node *root);
 		void ToHtml();
 };
 
