@@ -1,7 +1,17 @@
-# md2html
-A cpp program for converting markdown into html
+### md2html
 
-test file is test/test.md
+功能：将markdown文件转换成html文件
 
-![img1](http://github.com/letangers/md2html/files/img1.png)
-![img1](http://github.com/letangers/md2html/files/img2.png)
+usage:参照main.cpp
+
+css文件取自[实验楼课程](https://www.shiyanlou.com/courses/569)
+
+测试文件为:test/test.md
+效果如下:
+
+![img1](https://github.com/letangers/md2html/blob/master/files/img1.png)
+![img1](https://github.com/letangers/md2html/blob/master/files/img2.png)
+
+todo:
+  - 表格
+  - 实体符号自动转义
