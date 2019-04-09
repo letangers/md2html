@@ -2,5 +2,5 @@
 clean:
 	rm *.o
 
-t:test.cpp md2html.cpp
+t:main.cpp md2html.cpp
 	g++ -o $@ $^

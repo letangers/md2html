@@ -134,7 +134,7 @@ bool md2html::GetLink(string &line,int &locate){
 void md2html::FindRootSymbol(string & line,int &locate,bool &new_root){
 	int length=line.length();
 	char begin=line[locate];
-	if(begin=='#'){
+	if(begin=='#' && current_root->type_!=pre){
 		if(current_root->type_!=nul){
 			CreateNewRoot();
 		}
@@ -260,7 +260,9 @@ void md2html::GenerateTree(vector<string> & input){
 		if(IsEmptyLine(line,locate)){
 			tree_.push_back(new node(NULL));
 			//tree_.back()->type_=br;
-			new_root=true;
+			if(current_root->type_!=pre){
+				new_root=true;
+			}
 			continue;
 		}
 		if(new_root){
@@ -278,9 +280,6 @@ void md2html::Dfs(node * root){
 		if(root->type_==img){
 			content+="<img alt="+root->content_+" src="+root->link_ + " title="+root->title_+" />";
 			return;
-		}
-		if(root->type_==hr || root->type_==br){
-			content+="<"+tag[root->type_]+" />";
 		}
 		else{
 			//nul
@@ -307,7 +306,12 @@ void md2html::Dfs(node * root){
 void md2html::ToHtml(){
 	//dfs to create html
 	for(auto one: tree_){
-		if(one->type_!=img && one->type_!=hr && one->type_!=br && one->type_!=nul){
+		if(one->type_==hr || one->type_==br){
+			content+="<"+tag[one->type_]+" />";
+			continue;
+		}
+		
+		if(one->type_!=img && one->type_!=nul){
 			content+="<"+tag[one->type_]+">";
 		}
 		Dfs(one);
@@ -316,5 +320,4 @@ void md2html::ToHtml(){
 		}
 		content+="\n";
 	}
-	content+="</artical>\n";
 }
