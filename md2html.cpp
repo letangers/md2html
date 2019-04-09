@@ -21,7 +21,7 @@ void md2html::Strip(string & line,int &locate){
 }
 
 bool md2html::IsSymbol(string & line,int &locate,string symbol){
-	if(locate+symbol.length()>=line.length()){
+	if(locate+symbol.length()>line.length()){
 		return false;
 	}
 	for(int i=0;i<symbol.length();i++){
@@ -49,40 +49,49 @@ void md2html::GetNextSymbol(string & line,int &locate){
 		current_node->sub_node_.push_back(new node(current_node));
 		current_node=current_node->sub_node_.back();
 		if(GetLink(line,locate)){
+			current_node->type_=a;
 			current_node=current_node->GetFather();
 		}
 		else{
+			current_node->type_=nul;
+
+			int i=locate+1;
+			for(i;i<line.length();i++){
+				if(symbol_pre.find(line[i])!=symbol_pre.end()){
+					break;
+				}
+			}
+			current_node->content_=line.substr(locate,i-locate);
+			locate=i;
+			current_node=current_node->GetFather();
 			//if not a link,pop
-			node * temp=current_node->sub_node_.back();
-			current_node->sub_node_.pop_back();
-			delete temp;
+			//current_node->sub_node_.pop_back();
+			//delete temp;
 		}
 	}
 	else if(IsSymbol(line,locate,"`")){
 		CreateNewNode(code);
-		locate++;
 	}
 	else if(IsSymbol(line,locate,"**")){
 		CreateNewNode(strong);
-		locate+=2;
 	}
 	else if(IsSymbol(line,locate,"*")){
 		CreateNewNode(italic);
-		locate++;
 	}
 	else if(IsSymbol(line,locate,"~~")){
 		CreateNewNode(strike);
-		locate++;
 	}
 	else{
 		current_node->sub_node_.push_back(new node(current_node));
 		current_node=current_node->sub_node_.back();
-		for(locate;locate<line.length();locate++){
-			if(symbol_pre.find(line[locate])!=symbol_pre.end()){
+		int i=locate;
+		for(i;i<line.length();i++){
+			if(symbol_pre.find(line[i])!=symbol_pre.end()){
 				break;
 			}
-			current_node->content_+=line[locate];
 		}
+		current_node->content_=line.substr(locate,i-locate);
+		locate=i;
 		current_node=current_node->GetFather();
 	} 
 }
@@ -96,7 +105,7 @@ bool md2html::GetLink(string &line,int &locate){
 		if(line[i]=='('){
 			l_brackets=i;
 		}
-		if(line[i]==' '){
+		if(l_brackets!=0 && line[i]==' '){
 			blank=i;
 		}
 		if(line[i]==')'){
@@ -110,13 +119,13 @@ bool md2html::GetLink(string &line,int &locate){
 	if(l_brackets-1!=m_brackets || r_brackets<= l_brackets){
 		return false;
 	}
-	current_node->content_=line.substr(locate+1,m_brackets-locate);
+	current_node->content_=line.substr(locate+1,m_brackets-locate-1);
 	if(blank==0){
-		current_node->link_=line.substr(l_brackets+1,r_brackets-l_brackets);
+		current_node->link_=line.substr(l_brackets+1,r_brackets-l_brackets-1);
 	}
 	else{
-		current_node->link_=line.substr(l_brackets+1,blank-l_brackets);
-		current_node->title_=line.substr(blank+1,r_brackets-blank);
+		current_node->link_=line.substr(l_brackets+1,blank-l_brackets-1);
+		current_node->title_=line.substr(blank+1,r_brackets-blank-1);
 	}
 	locate=r_brackets+1;
 	return true;
@@ -155,6 +164,7 @@ void md2html::FindRootSymbol(string & line,int &locate,bool &new_root){
 				if(current_root->type_!=nul){
 					CreateNewRoot();
 				}
+				current_root->type_=img;
 				new_root=true;
 				return;
 			}
@@ -171,12 +181,16 @@ void md2html::FindRootSymbol(string & line,int &locate,bool &new_root){
 	else if(isdigit(begin)){
 		locate++;
 		if(IsSymbol(line,locate,". ")){
-			if(current_root->type_!=ol && current_root->type_!=nul){
+			if(current_root->type_==nul){
+				current_root->type_=ol;
+			}
+			else if(current_root->type_!=ol){
 				CreateNewRoot();
 				current_root->type_=ol;
 			}
-			CreateNewNode(li);
-			locate+=2;
+			current_root->sub_node_.push_back(new node(current_root));
+			current_node=current_root->sub_node_.back();
+			current_node->type_=li;
 			new_root=false;
 		}
 		else{
@@ -201,11 +215,16 @@ void md2html::FindRootSymbol(string & line,int &locate,bool &new_root){
 		}
 	}
 	else if(IsSymbol(line,locate,"- ")){
-		if(current_root->type_!=ul && current_root->type_!=nul){
+		if(current_root->type_==nul){
+			current_root->type_=ul;
+		}
+		else if(current_root->type_!=ul){
 			CreateNewRoot();
 			current_root->type_=ul;
 		}
-		CreateNewNode(li);
+		current_root->sub_node_.push_back(new node(current_root));
+		current_node=current_root->sub_node_.back();
+		current_node->type_=li;
 		new_root=false;
 	}
 	else if(IsSymbol(line,locate,"> ")){
@@ -213,6 +232,11 @@ void md2html::FindRootSymbol(string & line,int &locate,bool &new_root){
 			current_node->type_=quote;
 			new_root=false;
 		}
+	}
+	else{
+		current_node->sub_node_.push_back(new node(current_node));
+		current_node=current_node->sub_node_.back();
+		current_node->type_=para;
 	}
 
 	if(current_node->type_==nul){
@@ -235,7 +259,7 @@ void md2html::GenerateTree(vector<string> & input){
 		//if the line is empty,continue
 		if(IsEmptyLine(line,locate)){
 			tree_.push_back(new node(NULL));
-			tree_.back()->type_=br;
+			//tree_.back()->type_=br;
 			new_root=true;
 			continue;
 		}
@@ -253,6 +277,7 @@ void md2html::Dfs(node * root){
 	if(root->sub_node_.size()==0){
 		if(root->type_==img){
 			content+="<img alt="+root->content_+" src="+root->link_ + " title="+root->title_+" />";
+			return;
 		}
 		if(root->type_==hr || root->type_==br){
 			content+="<"+tag[root->type_]+" />";
@@ -266,19 +291,29 @@ void md2html::Dfs(node * root){
 	for(auto i : root->sub_node_){
 		if(i->type_==a){
 			content+="<a href="+i->link_+">"+i->content_+"</a>";
+			continue;
 		}
-		content+="<"+tag[i->type_]+">";
+		if(i->type_!=nul){
+			content+="<"+tag[i->type_]+">";
+		}
 		Dfs(i);
-		content+="</"+tag[i->type_]+">";
+		if(i->type_!=nul){
+			content+="</"+tag[i->type_]+">";
+		}
 	}
 
 }
 
 void md2html::ToHtml(){
-	string content="<artical>\n";
 	//dfs to create html
 	for(auto one: tree_){
+		if(one->type_!=img && one->type_!=hr && one->type_!=br && one->type_!=nul){
+			content+="<"+tag[one->type_]+">";
+		}
 		Dfs(one);
+		if(one->type_!=img && one->type_!=hr && one->type_!=br && one->type_!=nul){
+			content+="</"+tag[one->type_]+">";
+		}
 		content+="\n";
 	}
 	content+="</artical>\n";

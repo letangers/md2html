@@ -107,7 +107,7 @@ class md2html{
 			while(!fin.eof()){
 				input.push_back("");
 				auto &one = input.back();
-				fin>>one;
+				getline(fin,one);
 			}
 			fin.close();
 
