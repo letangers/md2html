@@ -1,0 +1,20 @@
+--- <hr>
+
+# title   \n		<h1>
+``` blockcode ```	<pre>
+- unseq list		<ul><li>
+1. seq list			<ol><li>
+> quote				<quote>
+![]() img link		<img src="url" alt="" title=""/>  in [] is alt,the "" after link in () is title
+
+[]() link			<a href="url">content </a>
+` code `			<code>
+* xieti *			<i>
+** B **				<strong>
+~~ S ~~				<strike>
+
+| a | b |			<table><tr><td></td><td></td></tr></table>
+|--| table
+
+//can be root
+title,list,quote,img,null,pre,table
